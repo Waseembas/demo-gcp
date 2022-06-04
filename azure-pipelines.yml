@@ -10,27 +10,27 @@ resources:
   containers:
   - container: my_container
     image: ubuntu:latest
-  - container: nginx
-    image: nginx
-  - container: redis
-    image: redis
+#  - container: nginx
+#    image: nginx
+#  - container: redis
+#    image: redis
 
 pool:
   vmImage: 'ubuntu-latest'
 
 container: my_container
 
-services:
-  nginx: nginx
-  redis: redis
+#services:
+  #nginx: nginx
+ # redis: redis
 
 
 
 
 steps:
-- script: |
+#- script: |
     #apt install -y curl
-    curl nginx
+    #curl nginx
     ##apt install -y redis-tools
     #redis-cli -h redis ping
 
