@@ -8,8 +8,8 @@ trigger:
 
 resources:
   containers:
-  - container: my_container
-    image: buildpack-deps:focal
+  #- container: my_container
+  #  image: buildpack-deps:focal
   - container: nginx
     image: nginx
 
@@ -17,7 +17,7 @@ resources:
 pool:
   vmImage: 'ubuntu-20.04'
 
-container: my_container
+#container: my_container
 services:
   nginx: nginx
 
