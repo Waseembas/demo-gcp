@@ -10,7 +10,7 @@ resources:
   containers:
 #  - container: my_container
 #    image: ubuntu:latest
-  - container: my_container
+  - container: nginx
     image: nginx
 #  - container: redis
 #    image: redis
@@ -18,7 +18,7 @@ resources:
 pool:
   vmImage: 'ubuntu-latest'
 
-container: my_container
+#container: my_container
 
 services:
   nginx: nginx
