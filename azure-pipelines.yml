@@ -23,5 +23,5 @@ services:
 
 steps:
 - script: |
-    curl nginx
+    curl localhost:80
   displayName: Show that nginx is running
