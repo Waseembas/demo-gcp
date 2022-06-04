@@ -16,7 +16,7 @@ resources:
     image: redis
 
 pool:
-  vmImage: 'ubuntu-16.04'
+  vmImage: 'ubuntu-latest'
 
 container: my_container
 
