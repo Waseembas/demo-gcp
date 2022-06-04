@@ -18,8 +18,8 @@ pool:
   vmImage: 'ubuntu-20.04'
 
 #container: my_container
-services:
-  nginx: nginx
+#services:
+#  nginx: nginx
 
 steps:
 - script: |
