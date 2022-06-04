@@ -10,7 +10,7 @@ resources:
   containers:
 #  - container: my_container
 #    image: ubuntu:latest
-  - container: nginx
+  - container: my_container
     image: nginx
 #  - container: redis
 #    image: redis
