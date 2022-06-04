@@ -8,10 +8,10 @@ trigger:
 
 resources:
   containers:
-  - container: my_container
-    image: ubuntu:latest
-#  - container: nginx
-#    image: nginx
+#  - container: my_container
+#    image: ubuntu:latest
+  - container: nginx
+    image: nginx
 #  - container: redis
 #    image: redis
 
@@ -20,22 +20,17 @@ pool:
 
 container: my_container
 
-#services:
-  #nginx: nginx
+services:
+  nginx: nginx
  # redis: redis
 
 
 
 
 steps:
-#- script: |
+- script: |
     #apt install -y curl
-    #curl nginx
+    curl nginx
     ##apt install -y redis-tools
     #redis-cli -h redis ping
 
-- script: |
-    sudo apt-get update
-    sudo apt-get install libgtk2.0-0
-    sudo apt-get install libgtk-3-0
-  displayName: 'Dep install'
