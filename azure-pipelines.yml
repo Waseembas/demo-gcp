@@ -28,6 +28,6 @@ steps:
 - script: |
     apt install -y curl
     curl nginx
-    apt install redis-tools
+    apt install -y redis-tools
     redis-cli -h redis ping
 
