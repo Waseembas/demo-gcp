@@ -8,29 +8,20 @@ trigger:
 
 resources:
   containers:
-#  - container: my_container
-#    image: ubuntu:latest
+  - container: my_container
+    image: buildpack-deps:focal
   - container: nginx
     image: nginx
-#  - container: redis
-#    image: redis
+
 
 pool:
-  vmImage: 'ubuntu-latest'
+  vmImage: 'ubuntu-20.04'
 
-#container: my_container
-
+container: my_container
 services:
   nginx: nginx
- # redis: redis
-
-
-
 
 steps:
 - script: |
-    #apt install -y curl
     curl nginx
-    ##apt install -y redis-tools
-    #redis-cli -h redis ping
-
+  displayName: Show that nginx is running
