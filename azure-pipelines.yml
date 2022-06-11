@@ -30,7 +30,7 @@ resources:
     image: python:3.9  
   - container: postgres
     image: postgres:9.6.2-alpine
-    variables:
+    env:
        POSTGRES_USER: root
        POSTGRES_DB: circle-test_test
        test: waseemmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm
@@ -70,3 +70,44 @@ steps:
     docker ps
     curl nginx:80
   displayName: Show that nginx is running
+
+- task: InstallSSHKey@0
+  inputs:
+          knownHostsEntry: $(github-known-host)
+          sshPublicKey: $(github-ssh-key-public)
+          sshKeySecureFile: $(github-ssh-key-name)
+          addEntryToConfig: true
+          configHostAlias: clone
+          configHostname: github.com
+          configUser: git
+  displayName: Install Second Repo SSH Key
+- bash: git clone git@github.com:rt-commercial-eng/rtcmd-models.git
+  displayName: Clone First Repo  
+  
+- script: sudo apt-get install python3-dev
+  displayName: Install Python 3 dev
+- script: sudo apt-get install libpq-dev
+  displayName: Install PostGres client
+- script: sudo apt-get install build-essential
+  displayName: Install build essential
+- script: pip install pipenv #Change the commnad from 'pipenv install'
+  displayName: Install package dependencies
+- script: pipenv install #Add this command 
+  displayName: Install pipenv package dependencies
+- script: pipenv run python -m pip install --index-url=https://bcms.bloomberg.com/pip/simple blpapi
+  displayName: Install blpapi
+- script: sleep 30
+  displayName: Wait for Redis
+  
+- script: |
+        curl nginx
+        export REDIS_HOST=redis
+        printenv
+        ls -altr
+        which docker 
+        docker ps
+        pipenv run python server/manage.py migrate
+        pipenv run python server/manage.py populate_history --auto
+  displayName: Run DB migrations
+- script: pipenv run python server/manage.py test service
+  displayName: Run tests on the web service
