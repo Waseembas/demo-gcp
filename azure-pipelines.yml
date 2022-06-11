@@ -17,11 +17,11 @@ resources:
 pool:
   vmImage: 'ubuntu-20.04'
 
-#container: my_container
-#services:
-#  nginx: nginx
+container: my_container
+services:
+  nginx: nginx
 
 steps:
 - script: |
-    curl localhost:80
+    curl nginx:80
   displayName: Show that nginx is running
