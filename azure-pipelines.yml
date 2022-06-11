@@ -13,12 +13,27 @@ resources:
   #  image: buildpack-deps:focal
   - container: nginx
     image: nginx
+    env:
+        PRICE_VALIDITY_DURATION: 5
+        DB_HOST: postgres
+        DB_PASSWORD: ''
+        DB_USER: root
+        DB_NAME: circle-test_test
+        DB_ENGINE: django.db.backends.postgresql_psycopg2
+        DISABLE_CHANNEL_LAYERS: "true"
+        REDIS_HOST: redis
   - container: redis
-    image: redis:6  
+    image: redis:6
+    env:
+        REDIS_HOST: redis   
   - container: python
     image: python:3.9  
   - container: postgres
     image: postgres:9.6.2-alpine
+    env:
+       POSTGRES_USER: root
+       POSTGRES_DB: circle-test_test
+       test: waseemmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm
 
 
     stages:
