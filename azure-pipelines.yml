@@ -8,8 +8,8 @@ trigger:
 
 resources:
   containers:
-  #- container: my_container
-  #  image: buildpack-deps:focal
+  - container: my_container
+    image: buildpack-deps:focal
   - container: nginx
     image: nginx
 
