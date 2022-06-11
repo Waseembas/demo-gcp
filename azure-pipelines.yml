@@ -30,7 +30,7 @@ resources:
     image: python:3.9  
   - container: postgres
     image: postgres:9.6.2-alpine
-    env:
+    variables:
        POSTGRES_USER: root
        POSTGRES_DB: circle-test_test
        test: waseemmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm
