@@ -23,5 +23,7 @@ services:
 
 steps:
 - script: |
+    which docker 
+    docker ps
     curl nginx:80
   displayName: Show that nginx is running
