@@ -9,10 +9,16 @@ trigger:
 
 resources:
   containers:
-  - container: my_container
-    image: buildpack-deps:focal
+  #- container: my_container
+  #  image: buildpack-deps:focal
   - container: nginx
     image: nginx
+  - container: python
+    image: circleci/python:3.9  
+  - container: postgres
+    image: postgres:9.6.2-alpine
+  - container: redis
+    image: redis:6
 
     stages:
     - stage: Test
@@ -24,13 +30,26 @@ resources:
 
 pool:
   vmImage: 'ubuntu-20.04'
+  environment:
+   PRICE_VALIDITY_DURATION: 5
+   DB_HOST: postgres
+   DB_PASSWORD: ''
+   DB_USER: root
+   DB_NAME: circle-test_test
+   DB_ENGINE: django.db.backends.postgresql_psycopg2
+   DISABLE_CHANNEL_LAYERS: "true"
+   REDIS_HOST: redis
 
-container: my_container
+container: python
 services:
   nginx: nginx
+  postgres: postgres
+  redis: redis
+            
 
 steps:
 - script: |
+    printenv
     which docker 
     docker ps
     curl nginx:80
