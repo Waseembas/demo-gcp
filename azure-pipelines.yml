@@ -6,12 +6,20 @@
 trigger:
 - main
 
+
 resources:
   containers:
   - container: my_container
     image: buildpack-deps:focal
   - container: nginx
     image: nginx
+
+    stages:
+    - stage: Test
+    displayName: Test Build
+    jobs:
+      - job: Test
+        displayName: Test-Pipeline
 
 
 pool:
