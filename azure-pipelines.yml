@@ -13,12 +13,13 @@ resources:
   #  image: buildpack-deps:focal
   - container: nginx
     image: nginx
+  - container: redis
+    image: redis:6  
   - container: python
-    image: circleci/python:3.9  
+    image: python:3.9  
   - container: postgres
     image: postgres:9.6.2-alpine
-  - container: redis
-    image: redis:6
+
 
     stages:
     - stage: Test
