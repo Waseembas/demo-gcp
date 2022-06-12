@@ -1,11 +1,6 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
 
 trigger:
-- main
-
+  - main
 
 resources:
   containers:
@@ -24,90 +19,208 @@ resources:
         REDIS_HOST: redis
   - container: redis
     image: redis:6
+    ports:
+    - 6379:6379
     env:
         REDIS_HOST: redis   
   - container: python
     image: python:3.9  
   - container: postgres
     image: postgres:9.6.2-alpine
+    ports:
+    - 5432:5432
     env:
        POSTGRES_USER: root
        POSTGRES_DB: circle-test_test
        test: waseemmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm
 
+  
 
-    stages:
-    - stage: Test
-    displayName: Test Build
-    jobs:
+variables:
+  - group: cicd
+  - name: tag
+    value: "$(Build.BuildId)"
+
+
+stages:
+   - stage: Build
+     displayName: Build image
+     jobs:
+       - job: Build
+         displayName: Build
+         pool:
+          vmImage: 'ubuntu-latest'
+
+         steps:
+           - task: InstallSSHKey@0
+             inputs:
+               knownHostsEntry: "$(github-known-host)"
+               #sshPassphrase: "$(github-ssh-key-phrase)"
+               sshKeySecureFile: "$(github-ssh-key-name)"
+               sshPublicKey: "$(github-ssh-key-public)"
+           - task: DownloadSecureFile@1
+             name: sshKey
+             displayName: "Download Github SSH Key"
+             inputs:
+               secureFile: "$(github-ssh-key-name)"
+           - script: |
+               hostname
+               chown root:root $(sshKey.secureFilePath)
+               mv $(sshKey.secureFilePath) $(Build.SourcesDirectory)/id_rsa
+
+           - task: UsePythonVersion@0
+             displayName: Use Python 3.9
+             inputs:
+               versionSpec: '3.9'
+  #         #    #architecture: 'x86'
+  #         #    #addToPath: true
+
+           - task: Bash@3
+             inputs:
+               targetType: 'inline'
+               script: |
+                 curl -sL https://sentry.io/get-cli/ | bash
+                 which sentry-cli
+  #               export export SENTRY_ORG=cicd
+  #               export SENTRY_PROJECT=cicd_project
+
+           - script: |
+                hostname
+                HASH=$(git rev-parse --short $BUILD_SOURCEVERSION)
+          
+  #         #- script: |
+  #         #    #curl -SL --progress-bar https://downloads.sentry-cdn.com/sentry-cli/1.62.0/sentry-cli-Linux-x86_64 > sentry-cli
+  #         #    #mv  sentry-cli  /usr/local/bin
+  #         #    #chmod u+x /usr/local/bin/sentry-cli
+  #         #    apt-get -y install sudo
+  #         #    curl -sL https://sentry.io/get-cli/ | bash
+  #         #    which sentry-cli
+
+             displayName: Download sentry cli
+          
+           - bash: sentry-cli update
+             displayName: Update Sentry CLI
+          
+           - bash: sed -i "s/VERSION/'$(Build.BuildNumber)'/g" ./server/service/version.py
+             displayName: Replace build number indicator
+          
+           - bash: sed -i "s/SHA1/'$(Build.SourceVersion)'/g" ./server/service/version.py
+             displayName: Replace build SHA1 indicator
+          
+           #- bash: sentry-cli releases new "$(Build.SourceVersion)" --org cicd
+           #  displayName: Create new Sentry release
+
+           #- bash: sentry-cli releases set-commits --auto "$(Build.SourceVersion)" --org cicd
+           #  displayName: Associate commits
+
+           - task: Docker@2
+             displayName: Build an image
+             inputs:
+               command: build
+               dockerfile: "$(Build.SourcesDirectory)/Dockerfile"
+               tags: |
+                 $(tag)
+               arguments: "--build-arg SSH_KEY_NAME=id_rsa"
+  #         #- bash: sentry-cli releases finalize "$(Build.SourceVersion)"
+  #         #  displayName: Finalize Sentry release
+
+   - stage: Test
+     displayName: Test Build
+     jobs:
       - job: Test
         displayName: Test-Pipeline
+        pool:
+          vmImage: ubuntu-latest
+
+          environment:
+            PRICE_VALIDITY_DURATION: 5
+            DB_HOST: postgres
+            DB_PASSWORD: ''
+            DB_USER: root
+            DB_NAME: circle-test_test
+            DB_ENGINE: django.db.backends.postgresql_psycopg2
+            DISABLE_CHANNEL_LAYERS: "true"
+            REDIS_HOST: redis
 
 
-pool:
-  vmImage: 'ubuntu-20.04'
-  environment:
-   PRICE_VALIDITY_DURATION: 5
-   DB_HOST: postgres
-   DB_PASSWORD: ''
-   DB_USER: root
-   DB_NAME: circle-test_test
-   DB_ENGINE: django.db.backends.postgresql_psycopg2
-   DISABLE_CHANNEL_LAYERS: "true"
-   REDIS_HOST: redis
+           
 
-container: python
-services:
-  nginx: nginx
-  postgres: postgres
-  redis: redis
-            
 
-steps:
-- script: |
-    printenv
-    which docker 
-    docker ps
-    curl nginx:80
-  displayName: Show that nginx is running
+        steps:
+          #- checkout
+          
 
-- task: InstallSSHKey@0
-  inputs:
-          knownHostsEntry: $(github-known-host)
-          sshPublicKey: $(github-ssh-key-public)
-          sshKeySecureFile: $(github-ssh-key-name)
-          addEntryToConfig: true
-          configHostAlias: clone
-          configHostname: github.com
-          configUser: git
-  displayName: Install Second Repo SSH Key
-- bash: git clone git@github.com:rt-commercial-eng/rtcmd-models.git
-  displayName: Clone First Repo  
-  
-- script: sudo apt-get install python3-dev
-  displayName: Install Python 3 dev
-- script: sudo apt-get install libpq-dev
-  displayName: Install PostGres client
-- script: sudo apt-get install build-essential
-  displayName: Install build essential
-- script: pip install pipenv #Change the commnad from 'pipenv install'
-  displayName: Install package dependencies
-- script: pipenv install #Add this command 
-  displayName: Install pipenv package dependencies
-- script: pipenv run python -m pip install --index-url=https://bcms.bloomberg.com/pip/simple blpapi
-  displayName: Install blpapi
-- script: sleep 30
-  displayName: Wait for Redis
-  
-- script: |
-        curl nginx
-        export REDIS_HOST=redis
-        printenv
-        ls -altr
-        which docker 
-        docker ps
-        pipenv run python server/manage.py migrate
-        pipenv run python server/manage.py populate_history --auto
-  displayName: Run DB migrations
-- script: pipenv run python server/manage.py test service
-  displayName: Run tests on the web service
+
+          - task: InstallSSHKey@0
+            inputs:
+                 knownHostsEntry: $(github-known-host)
+                 sshPublicKey: $(github-ssh-key-public)
+                 sshKeySecureFile: $(github-ssh-key-name)
+                 addEntryToConfig: true
+                 configHostAlias: clone
+                 configHostname: github.com
+                 configUser: git
+            displayName: Install Second Repo SSH Key
+          - bash: git clone git@github.com:rt-commercial-eng/rtcmd-models.git
+            displayName: Clone First Repo  
+          
+          #- task: DownloadSecureFile@1
+          #  name: sshKey
+          #  displayName: "Download Github SSH Key"
+          #  inputs:
+          #    secureFile: "$(github-ssh-key-name)"
+          #- bash: |
+          #    export RUNNER_ALLOW_RUNASROOT="1"
+          #    hostname
+          #    chown root:root $(sshKey.secureFilePath)
+          #    ls $(sshKey.secureFilePath)
+          #    #runAsRoot: true
+          #    #git clone  git@github.com/rt-commercial-eng/rtcmd-models.git
+              
+          - task: Bash@3
+            inputs:
+              targetType: 'inline'
+          # - script: |
+          #       COMMIT_MSG=$(git log --format=oneline -n 1 $CIRCLE_SHA1)
+          #       if [[ $COMMIT_MSG == *"[skip-ci-test]"* ]]; then
+          #         echo "[skip-ci-test] detected. Stopping."
+          #         #circleci step halt
+          #       fi
+          #       displayName: Detect [skip-ci-test] presence
+
+          - script: sudo apt-get install python3-dev
+            displayName: Install Python 3 dev
+          - script: sudo apt-get install libpq-dev
+            displayName: Install PostGres client
+          - script: sudo apt-get install build-essential
+            displayName: Install build essential
+          - script: pip install pipenv #Change the commnad from 'pipenv install'
+            displayName: Install package dependencies
+          - script: pipenv install #Add this command 
+            displayName: Install pipenv package dependencies
+          - script: pipenv run python -m pip install --index-url=https://bcms.bloomberg.com/pip/simple blpapi
+            displayName: Install blpapi
+
+
+          #- script: dockerize -wait tcp://localhost:6379 -timeout 1m
+          - script: sleep 30
+            displayName: Wait for Redis
+          #- script: |
+              #apt install -y curl
+              #curl nginx
+              #apt install redis-tools
+              #redis-cli -h redis ping 
+
+          - script: |
+              curl nginx
+              export REDIS_HOST=redis
+              printenv
+              ls -altr
+              which docker 
+              docker ps
+              pipenv run python server/manage.py migrate
+              pipenv run python server/manage.py populate_history --auto
+            displayName: Run DB migrations
+  #       - script: pipenv run python server/manage.py test service
+  #          displayName: Run tests on the web service
+        
